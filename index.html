@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Ego Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #resetBtn {
+            background-color: #dc3545;
+        }
+
+        #resetBtn:hover {
+            background-color: #b02a37;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .low-ego { background-color: #d4edda; }
+        .medium-ego { background-color: #fff3cd; }
+        .high-ego { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Ego Checker</h1>
+        <p>Paste your email text below to count "I" occurrences and check your ego level:</p>
+        
+        <textarea id="emailInput" placeholder="Paste your email here..."></textarea>
+        
+        <div>
+            <button onclick="analyzeText()">Analyze</button>
+            <button id="resetBtn" onclick="resetForm()">Reset</button>
+        </div>
+        
+        <div id="results" class="results" style="display: none;">
+            <p><strong>Total "I" count:</strong> <span id="iCount">0</span></p>
+            <p><strong>Word count:</strong> <span id="wordCount">0</span></p>
+            <p><strong>Ego Rating:</strong> <span id="egoRating"></span></p>
+            <p><em><span id="feedback"></span></em></p>
+        </div>
+    </div>
+
+    <script>
+        function analyzeText() {
+            const text = document.getElementById('emailInput').value;
+            const iCount = (text.match(/\bI\b/gi) || []).length;
+            const words = text.split(/\s+/).filter(word => word.length > 0);
+            const wordCount = words.length;
+            const iPercentage = wordCount > 0 ? (iCount / wordCount) * 100 : 0;
+
+            // Update results
+            document.getElementById('iCount').textContent = iCount;
+            document.getElementById('wordCount').textContent = wordCount;
+
+            const resultsDiv = document.getElementById('results');
+            const egoRating = document.getElementById('egoRating');
+            const feedback = document.getElementById('feedback');
+
+            // Remove previous classes
+            resultsDiv.classList.remove('low-ego', 'medium-ego', 'high-ego');
+
+            // Ego analysis
+            if (iPercentage < 2) {
+                resultsDiv.classList.add('low-ego');
+                egoRating.textContent = 'Low Ego';
+                feedback.textContent = 'Great job! Your email focuses more on others than yourself.';
+            } else if (iPercentage < 5) {
+                resultsDiv.classList.add('medium-ego');
+                egoRating.textContent = 'Moderate Ego';
+                feedback.textContent = 'Not bad, but you might want to shift some focus away from yourself.';
+            } else {
+                resultsDiv.classList.add('high-ego');
+                egoRating.textContent = 'High Ego';
+                feedback.textContent = 'Heads up! Your email is very self-focused. Try mentioning others more.';
+            }
+
+            resultsDiv.style.display = 'block';
+        }
+
+        function resetForm() {
+            document.getElementById('emailInput').value = '';
+            document.getElementById('results').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
