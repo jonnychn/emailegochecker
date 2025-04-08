@@ -7,13 +7,15 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            min-height: 100vh;
         }
         
         .container {
+            max-width: 800px;
+            margin: 0 auto;
             background: white;
             padding: 20px;
             border-radius: 8px;
@@ -28,6 +30,13 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -37,20 +46,18 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin-right: 10px;
+            flex: 1;
+            min-width: 100px;
         }
 
         button:hover {
             background-color: #0056b3;
         }
 
-        #resetBtn {
-            background-color: #dc3545;
-        }
-
-        #resetBtn:hover {
-            background-color: #b02a37;
-        }
+        #resetBtn { background-color: #dc3545; }
+        #resetBtn:hover { background-color: #b02a37; }
+        #copyBtn { background-color: #28a745; }
+        #copyBtn:hover { background-color: #218838; }
 
         .results {
             margin-top: 20px;
@@ -61,53 +68,100 @@
         .low-ego { background-color: #d4edda; }
         .medium-ego { background-color: #fff3cd; }
         .high-ego { background-color: #f8d7da; }
+
+        .thresholds {
+            margin: 10px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .thresholds label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            textarea { height: 150px; }
+            button { padding: 8px 15px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Email Ego Checker</h1>
-        <p>Paste your email text below to count "I" occurrences and check your ego level:</p>
+        <p>Paste your email text below to check your ego level:</p>
         
         <textarea id="emailInput" placeholder="Paste your email here..."></textarea>
         
-        <div>
-            <button onclick="analyzeText()">Analyze</button>
+        <div class="thresholds">
+            <label>Low Threshold (%): <input type="number" id="lowThreshold" value="2" min="0" max="100"></label>
+            <label>High Threshold (%): <input type="number" id="highThreshold" value="5" min="0" max="100"></label>
+        </div>
+
+        <div class="button-group">
+            <button id="copyBtn" onclick="copyResults()">Copy Results</button>
             <button id="resetBtn" onclick="resetForm()">Reset</button>
         </div>
         
         <div id="results" class="results" style="display: none;">
             <p><strong>Total "I" count:</strong> <span id="iCount">0</span></p>
             <p><strong>Word count:</strong> <span id="wordCount">0</span></p>
+            <p><strong>"I" Percentage:</strong> <span id="iPercentage">0</span>%</p>
+            <p><strong>Sentence count:</strong> <span id="sentenceCount">0</span></p>
+            <p><strong>Avg. "I" per sentence:</strong> <span id="iPerSentence">0</span></p>
             <p><strong>Ego Rating:</strong> <span id="egoRating"></span></p>
             <p><em><span id="feedback"></span></em></p>
         </div>
     </div>
 
     <script>
+        const emailInput = document.getElementById('emailInput');
+        const lowThresholdInput = document.getElementById('lowThreshold');
+        const highThresholdInput = document.getElementById('highThreshold');
+        
         function analyzeText() {
-            const text = document.getElementById('emailInput').value;
+            const text = emailInput.value;
             const iCount = (text.match(/\bI\b/gi) || []).length;
             const words = text.split(/\s+/).filter(word => word.length > 0);
             const wordCount = words.length;
             const iPercentage = wordCount > 0 ? (iCount / wordCount) * 100 : 0;
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const sentenceCount = sentences.length;
+            const iPerSentence = sentenceCount > 0 ? iCount / sentenceCount : 0;
 
             // Update results
             document.getElementById('iCount').textContent = iCount;
             document.getElementById('wordCount').textContent = wordCount;
+            document.getElementById('iPercentage').textContent = iPercentage.toFixed(2);
+            document.getElementById('sentenceCount').textContent = sentenceCount;
+            document.getElementById('iPerSentence').textContent = iPerSentence.toFixed(2);
 
             const resultsDiv = document.getElementById('results');
             const egoRating = document.getElementById('egoRating');
             const feedback = document.getElementById('feedback');
+            const lowThreshold = parseFloat(lowThresholdInput.value);
+            const highThreshold = parseFloat(highThresholdInput.value);
 
             // Remove previous classes
             resultsDiv.classList.remove('low-ego', 'medium-ego', 'high-ego');
 
             // Ego analysis
-            if (iPercentage < 2) {
+            if (iPercentage < lowThreshold) {
                 resultsDiv.classList.add('low-ego');
                 egoRating.textContent = 'Low Ego';
                 feedback.textContent = 'Great job! Your email focuses more on others than yourself.';
-            } else if (iPercentage < 5) {
+            } else if (iPercentage < highThreshold) {
                 resultsDiv.classList.add('medium-ego');
                 egoRating.textContent = 'Moderate Ego';
                 feedback.textContent = 'Not bad, but you might want to shift some focus away from yourself.';
@@ -121,9 +175,26 @@
         }
 
         function resetForm() {
-            document.getElementById('emailInput').value = '';
+            emailInput.value = '';
             document.getElementById('results').style.display = 'none';
+            lowThresholdInput.value = '2';
+            highThresholdInput.value = '5';
         }
+
+        function copyResults() {
+            const results = document.getElementById('results').innerText;
+            navigator.clipboard.writeText(results).then(() => {
+                alert('Results copied to clipboard!');
+            });
+        }
+
+        // Real-time analysis
+        emailInput.addEventListener('input', analyzeText);
+        lowThresholdInput.addEventListener('input', analyzeText);
+        highThresholdInput.addEventListener('input', analyzeText);
+
+        // Initial analysis if there's text
+        if (emailInput.value) analyzeText();
     </script>
 </body>
 </html>
